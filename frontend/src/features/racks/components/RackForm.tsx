@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { CreateRackInput, Rack } from '@/shared/types/api.types';
+import { useState } from 'react';
+import type { CreateRackInput, Rack } from '@/shared/types/api.types';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -13,28 +13,18 @@ interface RackFormProps {
 }
 
 export default function RackForm({ rack, onSubmit, onCancel, isLoading }: RackFormProps) {
-    const [formData, setFormData] = useState<CreateRackInput>({
-        tag: '',
-        name: '',
-        location: '',
-        capacity: 42,
-    });
+    const [formData, setFormData] = useState<CreateRackInput>(() => ({
+        tag: rack?.tag ?? '',
+        name: rack?.name ?? '',
+        location: rack?.location ?? '',
+        capacity: rack?.capacity ?? 42,
+    }));
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    useEffect(() => {
-        if (rack) {
-            setFormData({
-                tag: rack.tag,
-                name: rack.name,
-                location: rack.location || '',
-                capacity: rack.capacity,
-            });
-        }
-    }, [rack]);
-
     const validate = () => {
         const newErrors: Record<string, string> = {};
+        const capacity = formData.capacity ?? 0;
 
         if (!formData.tag.trim()) {
             newErrors.tag = 'Tag is required';
@@ -46,7 +36,7 @@ export default function RackForm({ rack, onSubmit, onCancel, isLoading }: RackFo
             newErrors.name = 'Name is required';
         }
 
-        if (formData.capacity < 1 || formData.capacity > 100) {
+        if (capacity < 1 || capacity > 100) {
             newErrors.capacity = 'Capacity must be between 1 and 100';
         }
 
@@ -62,6 +52,7 @@ export default function RackForm({ rack, onSubmit, onCancel, isLoading }: RackFo
             await onSubmit(formData);
         } catch (error) {
             // Error handled by parent
+            console.error('Error submitting rack form:', error);
         }
     };
 

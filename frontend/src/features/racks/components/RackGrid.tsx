@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useRacks } from '../hooks/useRacks';
 import RackCard from './RackCard';
 import RackForm from './RackForm';
-import { Rack } from '@/shared/types/api.types';
+import type { Rack } from '@/shared/types/api.types';
 import { Button } from '@/shared/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/shared/components/ui/use-toast';
@@ -13,6 +13,7 @@ export default function RackGrid() {
     const [editingRack, setEditingRack] = useState<Rack | undefined>();
     const { toast } = useToast();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleSubmit = async (data: any) => {
         try {
             if (editingRack) {
