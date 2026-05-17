@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rack-tracker-db
+    environment:
+      POSTGRES_USER: rackuser
+      POSTGRES_PASSWORD: rackpass
+      POSTGRES_DB: racktracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/02-seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rackuser -d racktracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rack-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rack-tracker-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://rackuser:rackpass@db:5432/racktracker
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rack-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  rack-network:
+    driver: bridge
