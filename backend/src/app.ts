@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application,Response } from 'express';
 import cors from 'cors';
 import { requestLogger } from './shared/logger';
 import { errorHandler } from './shared/errorHandler';
@@ -20,7 +20,7 @@ app.use(requestLogger);
 app.use(bodySanitizer);
 
 // Health check endpoint
-app.get('/healthz', async (req: Request, res: Response) => {
+app.get('/healthz', async ( res: Response) => {
     const dbHealthy = await db.healthCheck();
     const status = dbHealthy ? 200 : 503;
     res.status(status).json({
@@ -45,7 +45,7 @@ app.put('/api/equipment/:id', equipmentController.update.bind(equipmentControlle
 app.delete('/api/equipment/:id', equipmentController.delete.bind(equipmentController));
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use(( res: Response) => {
     res.status(404).json({
         success: false,
         message: 'Route not found',
