@@ -3,9 +3,9 @@ import { useRacks } from '../hooks/useRacks';
 import RackCard from './RackCard';
 import RackForm from './RackForm';
 import { Rack } from '@/shared/types/api.types';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/shared/components/ui/use-toast';
 
 export default function RackGrid() {
     const { racks, isLoading, createRack, updateRack, deleteRack, isCreating, isUpdating } = useRacks();
