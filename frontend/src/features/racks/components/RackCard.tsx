@@ -1,4 +1,4 @@
-import { Rack } from '@/shared/types/api.types';
+import type { Rack } from '@/shared/types/api.types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';

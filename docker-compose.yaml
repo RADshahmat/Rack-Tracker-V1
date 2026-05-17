@@ -10,8 +10,8 @@ services:
       POSTGRES_DB: racktracker
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/02-seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ./db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./db/02-seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -37,6 +37,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - rack-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rack-tracker-frontend
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+    depends_on:
+      - backend
     networks:
       - rack-network
     restart: unless-stopped
