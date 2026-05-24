@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS racks (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create equipment table
+-- Create equipment table (serial_nb and status fields should be added in future iterations)
 CREATE TABLE IF NOT EXISTS equipment (
   id SERIAL PRIMARY KEY,
   tag VARCHAR(50) UNIQUE NOT NULL,

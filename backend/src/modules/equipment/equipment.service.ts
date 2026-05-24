@@ -90,6 +90,17 @@ class EquipmentService {
       throw new AppError(500, 'Failed to delete equipment');
     }
   }
+
+  async getEquipmentByRackId(rackId: number): Promise<Equipment[]> {
+    // Verify rack exists first
+    const rack = await rackRepository.findById(rackId);
+    if (!rack) {
+      throw new AppError(404, `Rack with ID ${rackId} not found`);
+    }
+
+    return await this.repository.findByRackId(rackId);
+  }
+  
 }
 
 export default new EquipmentService(equipmentRepository);
