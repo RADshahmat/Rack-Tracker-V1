@@ -5,10 +5,35 @@ import { errorHandler } from './shared/errorHandler';
 import { bodySanitizer } from './shared/sanitizer';
 import router from './routes';
 import db from './shared/db';
+import helmet from 'helmet';
 
 const app: Application = express();
 
 // Middleware
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+    })
+);
+
+app.use(
+    helmet.frameguard({
+        action: "deny",
+    })
+);
+
+app.use(
+    helmet.hsts({
+        maxAge: 63072000,
+        includeSubDomains: true,
+    })
+);
+
+app.use((_req, res, next) => {
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    next();
+});
+
 app.use(cors({
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
     credentials: true,

@@ -6,6 +6,7 @@ import { PaginatedResponse } from '../../shared/types';
 export interface IEquipmentRepository {
     findAll(page?: number, limit?: number): Promise<PaginatedResponse<Equipment>>;
     findById(id: number): Promise<Equipment | null>;
+    findByRackId(rackId: number): Promise<Equipment[]>;
     findByTag(tag: string): Promise<Equipment | null>;
     create(data: CreateEquipmentInput): Promise<Equipment>;
     update(id: number, data: UpdateEquipmentInput): Promise<Equipment | null>;
@@ -56,6 +57,18 @@ class EquipmentRepository implements IEquipmentRepository {
         const result = await this.pool.query(query, [id]);
         return result.rows[0] || null;
     }
+
+    async findByRackId(rackId: number): Promise<Equipment[]> {
+        const query = `
+    SELECT id, tag, name, type, rack_id, slot_position, created_at, updated_at
+    FROM equipment
+    WHERE rack_id = $1
+    ORDER BY slot_position ASC NULLS LAST
+  `;
+        const result = await this.pool.query(query, [rackId]);
+        return result.rows;
+    }
+    
 
     async findByTag(tag: string): Promise<Equipment | null> {
         const query = `

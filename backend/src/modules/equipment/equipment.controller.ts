@@ -121,6 +121,29 @@ class EquipmentController {
             next(error);
         }
     }
+
+    async getByRackId(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const rackId = parseInt(req.params.rackId, 10);
+            if (isNaN(rackId)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid rack ID',
+                });
+                return;
+            }
+
+            const equipment = await equipmentService.getEquipmentByRackId(rackId);
+            const response: ApiResponse = {
+                success: true,
+                message: 'Rack equipment retrieved successfully',
+                data: equipment,
+            };
+            res.status(200).json(response);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new EquipmentController();
