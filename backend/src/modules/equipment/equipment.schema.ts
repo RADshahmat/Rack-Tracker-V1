@@ -18,12 +18,15 @@ export const createEquipmentSchema = z.object({
         .number()
         .int('Rack ID must be an integer')
         .positive('Rack ID must be positive')
+        .nullable()
+        .optional()
        ,
     slot_position: z
         .number()
         .int('Slot position must be an integer')
         .min(1, 'Slot position must be at least 1')
         .max(100, 'Slot position must be 100 or less')
+        .nullable()
         .optional(),
 });
 

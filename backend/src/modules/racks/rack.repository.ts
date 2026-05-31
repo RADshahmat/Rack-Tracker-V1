@@ -6,6 +6,7 @@ export interface IRackRepository {
     findAll(): Promise<Rack[]>;
     findById(id: number): Promise<Rack | null>;
     findByTag(tag: string): Promise<Rack | null>;
+    findOccupiedSlots(rackId: number): Promise<number[]>; 
     create(data: CreateRackInput): Promise<Rack>;
     update(id: number, data: UpdateRackInput): Promise<Rack | null>;
     delete(id: number): Promise<boolean>;
@@ -47,6 +48,20 @@ class RackRepository implements IRackRepository {
         const result = await this.pool.query(query, [tag]);
         return result.rows[0] || null;
     }
+
+
+    async findOccupiedSlots(rackId: number): Promise<number[]> {
+        const query = `
+        SELECT slot_position
+        FROM equipment
+        WHERE rack_id = $1
+          AND slot_position IS NOT NULL
+        ORDER BY slot_position ASC
+    `;
+        const result = await this.pool.query(query, [rackId]);
+        return result.rows.map((row) => row.slot_position);
+    }
+
 
     async create(data: CreateRackInput): Promise<Rack> {
         const query = `

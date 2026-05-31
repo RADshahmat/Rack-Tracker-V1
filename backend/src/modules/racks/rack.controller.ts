@@ -41,6 +41,30 @@ class RackController {
         }
     }
 
+
+    async getSlots(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = parseInt(req.params.id, 10);
+            if (isNaN(id)) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Invalid rack ID',
+                });
+                return;
+            }
+
+            const slots = await rackService.getRackSlots(id);
+            const response: ApiResponse = {
+                success: true,
+                message: 'Rack slots retrieved successfully',
+                data: slots,
+            };
+            res.status(200).json(response);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const validated = createRackSchema.parse(req.body);

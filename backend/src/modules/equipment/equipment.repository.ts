@@ -1,10 +1,10 @@
 import { Pool } from 'pg';
 import db from '../../shared/db';
 import { Equipment, CreateEquipmentInput, UpdateEquipmentInput } from './equipment.types';
-import { PaginatedResponse } from '../../shared/types';
+import { PaginatedResult } from '../../shared/types';
 
 export interface IEquipmentRepository {
-    findAll(page?: number, limit?: number): Promise<PaginatedResponse<Equipment>>;
+    findAll(page?: number, limit?: number): Promise<PaginatedResult<Equipment[]>>;
     findById(id: number): Promise<Equipment | null>;
     findByRackId(rackId: number): Promise<Equipment[]>;
     findByTag(tag: string): Promise<Equipment | null>;
@@ -20,7 +20,7 @@ class EquipmentRepository implements IEquipmentRepository {
         this.pool = db.getPool();
     }
 
-    async findAll(page = 1, limit = 10): Promise<PaginatedResponse<Equipment>> {
+    async findAll(page = 1, limit = 10): Promise<PaginatedResult<Equipment[]>> {
         const offset = (page - 1) * limit;
 
         // Get total count
@@ -30,10 +30,21 @@ class EquipmentRepository implements IEquipmentRepository {
 
         // Get paginated data
         const query = `
-      SELECT id, tag, name, type, rack_id, slot_position, created_at, updated_at
-      FROM equipment
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
+        SELECT
+            equipment.id,
+            equipment.tag,
+            equipment.name,
+            equipment.type,
+            equipment.rack_id,
+            racks.tag AS rack_tag,      
+            equipment.slot_position,
+            equipment.created_at,
+            equipment.updated_at
+        FROM equipment
+        LEFT JOIN racks ON equipment.rack_id = racks.id
+        ORDER BY equipment.created_at DESC
+        LIMIT $1 OFFSET $2
+
     `;
         const result = await this.pool.query(query, [limit, offset]);
 
@@ -50,9 +61,19 @@ class EquipmentRepository implements IEquipmentRepository {
 
     async findById(id: number): Promise<Equipment | null> {
         const query = `
-      SELECT id, tag, name, type, rack_id, slot_position, created_at, updated_at
-      FROM equipment
-      WHERE id = $1
+        SELECT
+            equipment.id,
+            equipment.tag,
+            equipment.name,
+            equipment.type,
+            equipment.rack_id,
+            racks.tag AS rack_tag,
+            equipment.slot_position,
+            equipment.created_at,
+            equipment.updated_at
+        FROM equipment
+        LEFT JOIN racks ON equipment.rack_id = racks.id
+      WHERE equipment.id = $1
     `;
         const result = await this.pool.query(query, [id]);
         return result.rows[0] || null;
@@ -60,22 +81,41 @@ class EquipmentRepository implements IEquipmentRepository {
 
     async findByRackId(rackId: number): Promise<Equipment[]> {
         const query = `
-    SELECT id, tag, name, type, rack_id, slot_position, created_at, updated_at
-    FROM equipment
-    WHERE rack_id = $1
-    ORDER BY slot_position ASC NULLS LAST
-  `;
+        SELECT
+            equipment.id,
+            equipment.tag,
+            equipment.name,
+            equipment.type,
+            equipment.rack_id,
+            racks.tag AS rack_tag,
+            equipment.slot_position,
+            equipment.created_at,
+            equipment.updated_at
+        FROM equipment
+        LEFT JOIN racks ON equipment.rack_id = racks.id
+        WHERE equipment.rack_id = $1
+        ORDER BY equipment.slot_position ASC NULLS LAST
+        `;
         const result = await this.pool.query(query, [rackId]);
         return result.rows;
     }
-    
 
     async findByTag(tag: string): Promise<Equipment | null> {
         const query = `
-      SELECT id, tag, name, type, rack_id, slot_position, created_at, updated_at
-      FROM equipment
-      WHERE tag = $1
-    `;
+        SELECT
+            equipment.id,
+            equipment.tag,
+            equipment.name,
+            equipment.type,
+            equipment.rack_id,
+            racks.tag AS rack_tag,
+            equipment.slot_position,
+            equipment.created_at,
+            equipment.updated_at
+        FROM equipment
+        LEFT JOIN racks ON equipment.rack_id = racks.id
+        WHERE equipment.tag = $1 
+        `;
         const result = await this.pool.query(query, [tag]);
         return result.rows[0] || null;
     }
@@ -127,11 +167,11 @@ class EquipmentRepository implements IEquipmentRepository {
         values.push(id);
 
         const query = `
-      UPDATE equipment
-      SET ${fields.join(', ')}
-      WHERE id = $${paramCount}
-      RETURNING id, tag, name, type, rack_id, slot_position, created_at, updated_at
-    `;
+                UPDATE equipment
+                SET ${fields.join(', ')}
+                WHERE id = $${paramCount}
+                RETURNING id, tag, name, type, rack_id, slot_position, created_at, updated_at
+                `;
 
         const result = await this.pool.query(query, values);
         return result.rows[0] || null;

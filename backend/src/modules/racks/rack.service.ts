@@ -21,6 +21,33 @@ class RackService {
         return rack;
     }
 
+    async getRackSlots(rackId: number): Promise<{
+        total: number;
+        occupied: number[];
+        available: number[];
+        occupiedCount: number;
+        availableCount: number;
+    }> {
+        const rack = await this.repository.findById(rackId);
+        if (!rack) {
+            throw new AppError(404, `Rack with ID ${rackId} not found`);
+        }
+
+        const occupiedSlots = await this.repository.findOccupiedSlots(rackId);
+
+        const allSlots = Array.from({ length: rack.capacity }, (_, i) => i + 1);
+        const occupiedSet = new Set(occupiedSlots);
+        const availableSlots = allSlots.filter((slot) => !occupiedSet.has(slot));
+
+        return {
+            total: rack.capacity,
+            occupied: occupiedSlots,
+            available: availableSlots,
+            occupiedCount: occupiedSlots.length,
+            availableCount: availableSlots.length,
+        };
+    }
+
     async createRack(data: CreateRackInput): Promise<Rack> {
         // Check for duplicate tag
         const existing = await this.repository.findByTag(data.tag);
