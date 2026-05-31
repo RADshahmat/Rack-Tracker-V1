@@ -42,6 +42,7 @@ export const errorHandler = (
             message: err.message,
             errors: err.errors,
         };
+        console.log('heyyyyyy AppError:', response);
         res.status(err.statusCode).json(response);
         return;
     }

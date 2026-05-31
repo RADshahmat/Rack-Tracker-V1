@@ -2,7 +2,7 @@ import equipmentRepository, { IEquipmentRepository } from './equipment.repositor
 import rackRepository from '../racks/rack.repository';
 import { Equipment, CreateEquipmentInput, UpdateEquipmentInput } from './equipment.types';
 import { AppError } from '../../shared/errorHandler';
-import { PaginatedResponse } from '../../shared/types';
+import { PaginatedResult } from '../../shared/types';
 
 class EquipmentService {
   private repository: IEquipmentRepository;
@@ -11,7 +11,7 @@ class EquipmentService {
     this.repository = repository;
   }
 
-  async getAllEquipment(page?: number, limit?: number): Promise<PaginatedResponse<Equipment>> {
+  async getAllEquipment(page?: number, limit?: number): Promise<PaginatedResult<Equipment[]>> {
     return await this.repository.findAll(page, limit);
   }
 

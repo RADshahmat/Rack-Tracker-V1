@@ -13,14 +13,14 @@ export interface CreateEquipmentInput {
     tag: string;
     name: string;
     type?: string;
-    rack_id?: number;
-    slot_position?: number;
+    rack_id?: number | null;
+    slot_position?: number | null;
 }
 
 export interface UpdateEquipmentInput {
     tag?: string;
     name?: string;
     type?: string;
-    rack_id?: number;
-    slot_position?: number;
+    rack_id?: number | null;
+    slot_position?: number | null;
 }

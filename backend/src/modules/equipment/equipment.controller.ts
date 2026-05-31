@@ -30,7 +30,8 @@ class EquipmentController {
             const response: ApiResponse = {
                 success: true,
                 message: 'Equipment retrieved successfully',
-                data: result,
+                data: result.data,
+                pagination: result.pagination,
             };
             res.status(200).json(response);
         } catch (error) {
