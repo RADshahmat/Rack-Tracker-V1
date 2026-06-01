@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
-import { Equipment, Rack } from '@/types';
+import type { Equipment, Rack } from '@/types';
 import { useRacks } from '@/features/racks/hooks/useRacks';
 import { useRackSlots, useUpdateEquipment } from '../hooks/useEquipment';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ export function PlaceInRackModal({ equipment, onClose, onSuccess }: PlaceInRackM
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-dark-surface rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 dark:text-white">Place Equipment in Rack</h3>
           <button
             onClick={onClose}
@@ -124,7 +124,7 @@ export function PlaceInRackModal({ equipment, onClose, onSuccess }: PlaceInRackM
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-dark-border flex gap-2 justify-end flex-shrink-0">
+        <div className="p-4 border-t border-gray-200 dark:border-dark-border flex gap-2 justify-end shrink-0">
           <Button
             variant="outline"
             onClick={onClose}

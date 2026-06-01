@@ -1,5 +1,5 @@
 import { Trash2, Loader2 } from 'lucide-react';
-import { Equipment } from '@/types';
+import type { Equipment } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

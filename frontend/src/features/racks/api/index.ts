@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/client';
-import { Rack, ApiResponse } from '@/types';
-import { RackFormInput } from '@/types/schemas';
+import type { Rack, ApiResponse } from '@/types/index';
+import type { RackFormInput } from '@/types/schemas';
 
 export const racksApi = {
   getAll: () =>

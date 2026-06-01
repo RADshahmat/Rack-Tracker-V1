@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { equipmentApi } from '../api';
-import { EquipmentFormInput } from '@/types/schemas';
+import type { EquipmentFormInput } from '@/types/schemas';
 import { queryKeys } from '@/api/queryKeys';
 
 export const useEquipment = (page: number = 1, limit: number = 10) => {

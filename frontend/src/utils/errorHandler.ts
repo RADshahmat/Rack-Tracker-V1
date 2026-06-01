@@ -1,4 +1,4 @@
-import { UseFormSetError } from 'react-hook-form';
+import type { UseFormSetError } from 'react-hook-form';
 
 interface FieldError {
   field: string;

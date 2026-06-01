@@ -26,7 +26,7 @@ export function EquipmentPreview({ equipmentId, onClose }: EquipmentPreviewProps
   if (error || !equipment) {
     return (
       <div className="bg-white dark:bg-dark-surface flex flex-col overflow-hidden h-full">
-        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm">EQUIPMENT PREVIEW</h3>
           <button
             onClick={onClose}
@@ -46,7 +46,7 @@ export function EquipmentPreview({ equipmentId, onClose }: EquipmentPreviewProps
     <>
       <div className="bg-white dark:bg-dark-surface flex flex-col overflow-hidden h-full">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-gray-200 dark:border-dark-border flex items-center justify-between shrink-0">
           <h3 className="font-semibold text-gray-900 dark:text-white text-sm">EQUIPMENT PREVIEW</h3>
           <button
             onClick={onClose}
@@ -118,7 +118,7 @@ export function EquipmentPreview({ equipmentId, onClose }: EquipmentPreviewProps
         </div>
 
         {/* Actions */}
-        <div className="p-4 border-t border-gray-200 dark:border-dark-border space-y-2 flex-shrink-0">
+        <div className="p-4 border-t border-gray-200 dark:border-dark-border space-y-2 shrink-0">
           <button
             onClick={() => setShowEditModal(true)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-dark-border/80 text-gray-900 dark:text-white text-xs rounded transition-colors"

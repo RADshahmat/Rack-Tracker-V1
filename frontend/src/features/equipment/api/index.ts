@@ -1,6 +1,6 @@
 import { apiClient } from '@/api/client';
-import { Equipment, ApiResponse, PaginatedResponse } from '@/types';
-import { EquipmentFormInput } from '@/types/schemas';
+import type { Equipment, ApiResponse} from '@/types';
+import type { EquipmentFormInput } from '@/types/schemas';
 
 export interface RackSlotsResponse {
   total: number;
@@ -12,7 +12,7 @@ export interface RackSlotsResponse {
 
 export const equipmentApi = {
   getAll: (page: number = 1, limit: number = 10) =>
-    apiClient.get<ApiResponse<PaginatedResponse<Equipment>>>('/equipment', {
+    apiClient.get<ApiResponse<Equipment[]>>('/equipment', {
       params: { page, limit },
     }),
 

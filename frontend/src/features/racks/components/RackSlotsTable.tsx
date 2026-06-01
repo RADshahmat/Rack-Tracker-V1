@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Equipment, Rack } from '@/types';
+import type { Equipment, Rack } from '@/types';
 
 interface RackSlotsTableProps {
   rack: Rack;
@@ -11,7 +11,7 @@ interface RackSlotsTableProps {
   onAssignSlot: (slotPosition: number) => void;
 }
 
-export function RackSlotsTable({ rack, equipment, selectedEquipmentId, onSelectEquipment, onAssignSlot }: RackSlotsTableProps) {
+export function RackSlotsTable({ rack, equipment, onSelectEquipment, onAssignSlot }: RackSlotsTableProps) {
   // Create an array of all slots
   const allSlots = Array.from({ length: rack.capacity }, (_, i) => i + 1);
   

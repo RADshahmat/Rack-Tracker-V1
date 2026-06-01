@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Equipment } from '@/types';
+import type { Equipment } from '@/types';
 import { FormModal } from '@/components/common/FormModal';
 import { EquipmentForm } from './EquipmentForm';
 
