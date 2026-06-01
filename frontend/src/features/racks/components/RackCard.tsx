@@ -1,4 +1,4 @@
-import { Rack } from '@/types';
+import type { Rack } from '@/types';
 import { Edit, Trash2 } from 'lucide-react';
 
 interface RackCardProps {

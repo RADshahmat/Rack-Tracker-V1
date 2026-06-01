@@ -1,8 +1,8 @@
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useEffect } from 'react';
-import { Equipment, Rack } from '@/types';
-import { EquipmentFormInput, equipmentSchema } from '@/types/schemas';
+import type { Equipment, Rack } from '@/types';
+import {type  EquipmentFormInput, equipmentSchema } from '@/types/schemas';
 import { useUpdateEquipment, useCreateEquipment, useRackSlots } from '../hooks/useEquipment';
 import { useRacks } from '@/features/racks/hooks/useRacks';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,6 @@ export function EquipmentForm({
     handleSubmit,
     setError,
     watch,
-    setValue,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<EquipmentFormInput>({

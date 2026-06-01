@@ -1,5 +1,5 @@
 import { Plus, Loader2 } from 'lucide-react';
-import { Rack, Equipment } from '@/types';
+import type { Rack, Equipment } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RackSlotsTable } from './RackSlotsTable';
@@ -13,11 +13,11 @@ interface RackDetailsProps {
   onSelectEquipment: (id: number) => void;
 }
 
-const statusColorMap: Record<string, 'default' | 'success' | 'warning' | 'destructive'> = {
-  STABLE: 'success',
-  WARNING: 'warning',
-  CRITICAL: 'destructive',
-};
+// const statusColorMap: Record<string, 'default' | 'success' | 'warning' | 'destructive'> = {
+//   STABLE: 'success',
+//   WARNING: 'warning',
+//   CRITICAL: 'destructive',
+// };
 
 export function RackDetails({
   rack,
@@ -30,7 +30,7 @@ export function RackDetails({
   return (
     <div className="bg-white dark:bg-dark-surface flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-dark-border p-4 flex-shrink-0 space-y-4">
+      <div className="border-b border-gray-200 dark:border-dark-border p-4 shrink-0 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -39,7 +39,7 @@ export function RackDetails({
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">{rack.name}</p>
           </div>
-          <Button onClick={() => onAddEquipment()} size="sm" className="gap-2 flex-shrink-0">
+          <Button onClick={() => onAddEquipment()} size="sm" className="gap-2 shrink-0">
             <Plus size={14} />
             Add Equipment
           </Button>

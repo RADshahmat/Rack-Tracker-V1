@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { racksApi } from '../api';
-import { RackFormInput } from '@/types/schemas';
+import type { RackFormInput } from '@/types/schemas';
 import { queryKeys } from '@/api/queryKeys';
 
 export const useRacks = () => {

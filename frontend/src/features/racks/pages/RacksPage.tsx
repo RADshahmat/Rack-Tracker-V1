@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Search, Loader2 } from 'lucide-react';
 import { useRacks, useDeleteRack } from '@/features/racks/hooks/useRacks';
 import { useEquipmentByRackId } from '@/features/equipment/hooks/useEquipment';
-import { Rack } from '@/types';
+import type { Rack } from '@/types';
 import { RackCard } from '../components/RackCard';
 import { RackDetails } from '../components/RackDetails';
 import { EquipmentPreview } from '@/features/equipment/components/EquipmentPreview';
@@ -97,7 +97,7 @@ export function RacksPage() {
       {/* Main content - three column layout */}
       <div className="flex-1 flex overflow-hidden gap-4 p-4 bg-white dark:bg-dark-bg">
         {/* Left: Rack grid (narrow) */}
-        <div className="w-100 flex-shrink-0 overflow-auto border border-gray-200 dark:border-dark-border rounded-lg bg-gray-50 dark:bg-dark-surface p-3">
+        <div className="w-100 shrink-0 overflow-auto border border-gray-200 dark:border-dark-border rounded-lg bg-gray-50 dark:bg-dark-surface p-3">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="text-sky-600 dark:text-sky-500 animate-spin" size={24} />
@@ -146,11 +146,11 @@ export function RacksPage() {
 
         {/* Right: Equipment preview */}
         {selectedEquipmentId ? (
-          <div className="w-80 flex-shrink-0 border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden">
+          <div className="w-80 shrink-0 border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden">
             <EquipmentPreview equipmentId={selectedEquipmentId} onClose={() => setSelectedEquipmentId(null)} />
           </div>
         ) : (
-          <div className="w-80 flex-shrink-0 border border-gray-200 dark:border-dark-border rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div className="w-80 shrink-0 border border-gray-200 dark:border-dark-border rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
             <p className="text-sm text-center px-4">Select equipment to view details</p>
           </div>
         )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Rack } from '@/types';
+import type { Rack } from '@/types';
 import { FormModal } from '@/components/common/FormModal';
 import { RackForm } from './RackForm';
 

@@ -1,6 +1,6 @@
 import { useLocation, Link } from 'react-router-dom';
 import { useTheme } from '@/components/shared/ThemeProvider';
-import { LayoutDashboard, Server, Cpu, Moon, Sun, LogOut, Map, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Server, Cpu, Moon, Sun, LogOut} from 'lucide-react';
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -33,7 +33,7 @@ export function Sidebar({ isExpanded }: SidebarProps) {
       {isExpanded && (
         <div className="px-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-sky-600 dark:bg-sky-600 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            <div className="w-10 h-10 bg-sky-600 dark:bg-sky-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
               DC
             </div>
             <div className="flex flex-col">
@@ -61,7 +61,7 @@ export function Sidebar({ isExpanded }: SidebarProps) {
               }`}
               title={isExpanded ? '' : item.label}
             >
-              <Icon size={20} className="flex-shrink-0" />
+              <Icon size={20} className="shrink-0" />
               {isExpanded && <span className="text-sm font-medium">{item.label}</span>}
             </Link>
           );

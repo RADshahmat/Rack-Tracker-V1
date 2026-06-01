@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search, Grid, Loader2 } from 'lucide-react';
 import { useRacks } from '@/features/racks/hooks/useRacks';
-import { Rack } from '@/types';
+import type { Rack } from '@/types';
 import { RackCard } from './RackCard';
 import { CreateRackModal } from './CreateRackModal';
 

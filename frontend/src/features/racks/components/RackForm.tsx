@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Rack } from '@/types';
-import { RackFormInput, rackSchema } from '@/types/schemas';
+import type { Rack } from '@/types';
+import { type RackFormInput, rackSchema } from '@/types/schemas';
 import { useUpdateRack, useCreateRack } from '../hooks/useRacks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
