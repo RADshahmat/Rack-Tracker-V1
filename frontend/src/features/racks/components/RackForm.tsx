@@ -1,130 +1,124 @@
-import { useState } from 'react';
-import type { CreateRackInput, Rack } from '@/shared/types/api.types';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Rack } from '@/types';
+import { RackFormInput, rackSchema } from '@/types/schemas';
+import { useUpdateRack, useCreateRack } from '../hooks/useRacks';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormField, FormMessage } from '@/components/ui/form';
+import { handleBackendErrors } from '@/utils/errorHandler';
+import { toast } from 'sonner';
 
 interface RackFormProps {
-    rack?: Rack;
-    onSubmit: (data: CreateRackInput) => Promise<void>;
-    onCancel: () => void;
-    isLoading: boolean;
+  rack?: Rack;
+  onSuccess?: () => void;
+  isLoading?: boolean;
 }
 
-export default function RackForm({ rack, onSubmit, onCancel, isLoading }: RackFormProps) {
-    const [formData, setFormData] = useState<CreateRackInput>(() => ({
-        tag: rack?.tag ?? '',
-        name: rack?.name ?? '',
-        location: rack?.location ?? '',
-        capacity: rack?.capacity ?? 42,
-    }));
+export function RackForm({
+  rack,
+  onSuccess,
+  isLoading = false,
+}: RackFormProps) {
+  const isEditing = !!rack;
+  const updateRack = useUpdateRack();
+  const createRack = useCreateRack();
+  const mutation = isEditing ? updateRack : createRack;
 
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const validate = () => {
-        const newErrors: Record<string, string> = {};
-        const capacity = formData.capacity ?? 0;
-
-        if (!formData.tag.trim()) {
-            newErrors.tag = 'Tag is required';
-        } else if (!/^[A-Z0-9-]+$/.test(formData.tag)) {
-            newErrors.tag = 'Tag must contain only uppercase letters, numbers, and hyphens';
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<RackFormInput>({
+    resolver: zodResolver(rackSchema),
+    defaultValues: rack
+      ? {
+          tag: rack.tag,
+          name: rack.name,
+          location: rack.location,
+          capacity: rack.capacity,
         }
+      : undefined,
+  });
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
-        }
+  const onSubmit = async (data: RackFormInput) => {
+    try {
+      if (isEditing && rack) {
+        await updateRack.mutateAsync({
+          id: rack.id,
+          data,
+        });
+        toast.success('Rack updated successfully');
+      } else {
+        await createRack.mutateAsync(data);
+        toast.success('Rack created successfully');
+        reset();
+      }
+      onSuccess?.();
+    } catch (error) {
+      const errorMessage = handleBackendErrors(error, setError);
+      toast.error(errorMessage);
+    }
+  };
 
-        if (capacity < 1 || capacity > 100) {
-            newErrors.capacity = 'Capacity must be between 1 and 100';
-        }
+  return (
+    <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <FormField>
+        <Label htmlFor="tag">Tag *</Label>
+        <Input
+          id="tag"
+          placeholder="e.g., Rack-1"
+          disabled={isSubmitting || isLoading}
+          {...register('tag')}
+        />
+        {errors.tag && <FormMessage>{errors.tag.message}</FormMessage>}
+      </FormField>
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+      <FormField>
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          placeholder="e.g., Main Server Rack"
+          disabled={isSubmitting || isLoading}
+          {...register('name')}
+        />
+        {errors.name && <FormMessage>{errors.name.message}</FormMessage>}
+      </FormField>
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validate()) return;
+      <FormField>
+        <Label htmlFor="location">Location *</Label>
+        <Input
+          id="location"
+          placeholder="e.g., DataCenter A, Row 1"
+          disabled={isSubmitting || isLoading}
+          {...register('location')}
+        />
+        {errors.location && <FormMessage>{errors.location.message}</FormMessage>}
+      </FormField>
 
-        try {
-            await onSubmit(formData);
-        } catch (error) {
-            // Error handled by parent
-            console.error('Error submitting rack form:', error);
-        }
-    };
+      <FormField>
+        <Label htmlFor="capacity">Capacity (U) *</Label>
+        <Input
+          id="capacity"
+          type="number"
+          placeholder="e.g., 42"
+          disabled={isSubmitting || isLoading}
+          {...register('capacity', { valueAsNumber: true })}
+        />
+        {errors.capacity && <FormMessage>{errors.capacity.message}</FormMessage>}
+      </FormField>
 
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{rack ? 'Edit Rack' : 'Create New Rack'}</CardTitle>
-            </CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="tag">
-                            Tag <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="tag"
-                            value={formData.tag}
-                            onChange={(e) => setFormData({ ...formData, tag: e.target.value.toUpperCase() })}
-                            placeholder="RACK-A1"
-                            className={errors.tag ? 'border-destructive' : ''}
-                        />
-                        {errors.tag && <p className="text-sm text-destructive">{errors.tag}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="name">
-                            Name <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="Production Rack A1"
-                            className={errors.name ? 'border-destructive' : ''}
-                        />
-                        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                            id="location"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            placeholder="Data Center - Row A"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="capacity">Capacity (U)</Label>
-                        <Input
-                            id="capacity"
-                            type="number"
-                            value={formData.capacity}
-                            onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
-                            min="1"
-                            max="100"
-                            className={errors.capacity ? 'border-destructive' : ''}
-                        />
-                        {errors.capacity && <p className="text-sm text-destructive">{errors.capacity}</p>}
-                    </div>
-                </CardContent>
-
-                <CardFooter className="gap-2">
-                    <Button type="submit" disabled={isLoading} className="flex-1">
-                        {isLoading ? 'Saving...' : rack ? 'Update Rack' : 'Create Rack'}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                        Cancel
-                    </Button>
-                </CardFooter>
-            </form>
-        </Card>
-    );
+      <div className="flex gap-2 justify-end pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting || isLoading || mutation.isPending}
+        >
+          {isSubmitting || mutation.isPending ? 'Saving...' : isEditing ? 'Update Rack' : 'Create Rack'}
+        </Button>
+      </div>
+    </Form>
+  );
 }

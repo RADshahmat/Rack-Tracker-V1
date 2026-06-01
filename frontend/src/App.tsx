@@ -1,36 +1,53 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { Toaster } from '@/shared/components/ui/toaster';
-import Layout from '@/shared/components/Layout';
-import RackGrid from '@/features/racks/components/RackGrid';
-import EquipmentList from '@/features/equipment/components/EquipmentList';
+import { Toaster } from 'sonner';
+import { ThemeProvider, useTheme } from '@/components/shared/ThemeProvider';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Dashboard } from '@/features/racks/pages/Dashboard';
+import { RacksPage } from '@/features/racks/pages/RacksPage';
+import { EquipmentPage } from '@/features/equipment/pages/EquipmentPage';
+import '@/index.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });
 
-function App() {
+function AppContentWrapper() {
+  const { theme } = useTheme();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/racks" replace />} />
-            <Route path="/racks" element={<RackGrid />} />
-            <Route path="/equipment" element={<EquipmentList />} />
-          </Routes>
-        </Layout>
-        <Toaster />
-      </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <>
+      <Router>
+        <Routes>
+          <Route element={<MainLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/racks" element={<RacksPage />} />
+            <Route path="/equipment" element={<EquipmentPage />} />
+          </Route>
+        </Routes>
+      </Router>
+      <Toaster
+        position="top-right"
+        theme={theme === 'dark' ? 'dark' : 'light'}
+        richColors
+        closeButton
+      />
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AppContentWrapper />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}

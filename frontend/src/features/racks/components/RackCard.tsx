@@ -1,53 +1,73 @@
-import type { Rack } from '@/shared/types/api.types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button';
-import { Badge } from '@/shared/components/ui/badge';
-import { MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Rack } from '@/types';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface RackCardProps {
-    rack: Rack;
-    onEdit: (rack: Rack) => void;
-    onDelete: (id: number) => void;
+  rack: Rack;
+  isSelected?: boolean;
+  onClick?: () => void;
+  onEdit?: (rack: Rack) => void;
+  onDelete?: (id: number) => void;
 }
 
-export default function RackCard({ rack, onEdit, onDelete }: RackCardProps) {
-    const handleDelete = () => {
-        if (confirm(`Are you sure you want to delete rack ${rack.tag}?`)) {
-            onDelete(rack.id);
-        }
-    };
+export function RackCard({ rack, isSelected, onClick, onEdit, onDelete }: RackCardProps) {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit?.(rack);
+  };
 
-    return (
-        <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                        <CardTitle>{rack.tag}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{rack.name}</p>
-                    </div>
-                    <Badge variant="secondary">{rack.capacity}U</Badge>
-                </div>
-            </CardHeader>
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete?.(rack.id);
+  };
 
-            <CardContent>
-                {rack.location && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{rack.location}</span>
-                    </div>
-                )}
-            </CardContent>
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-lg overflow-hidden cursor-pointer transition-all group border-2 ${isSelected
+          ? 'border-sky-500 shadow-lg bg-sky-50 dark:bg-sky-900/20'
+          : 'border-gray-200 dark:border-dark-border hover:border-sky-500 dark:hover:border-sky-500'
+        }`}
+    >
+      {/* Rack image - top */}
+      <div className="relative overflow-hidden bg-gray-100 dark:bg-dark-bg h-28">
+        <img
+          src="/rack.png"
+          alt={rack.tag}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+        />
+        {/* Icons overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+          <button
+            onClick={handleEditClick}
+            className="p-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg transition-colors"
+            title="Edit rack"
+          >
+            <Edit size={18} />
+          </button>
+          <button
+            onClick={handleDeleteClick}
+            className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            title="Delete rack"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      </div>
 
-            <CardFooter className="gap-2">
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => onEdit(rack)}>
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Edit
-                </Button>
-                <Button variant="destructive" size="sm" className="flex-1" onClick={handleDelete}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                </Button>
-            </CardFooter>
-        </Card>
-    );
+      {/* Rack info - bottom */}
+      <div className="p-3 space-y-2">
+        <div>
+          <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{rack.tag}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{rack.name}</p>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-600 dark:text-gray-400">Total Slots:</span>
+          <span className="font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-dark-bg px-2 py-1 rounded">
+            {rack.capacity}U
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
+

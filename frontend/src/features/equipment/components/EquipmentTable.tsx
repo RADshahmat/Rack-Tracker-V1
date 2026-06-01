@@ -1,83 +1,114 @@
-import type { Equipment } from '@/shared/types/api.types';
-import { Button } from '@/shared/components/ui/button';
-import { Badge } from '@/shared/components/ui/badge';
-import { Table,TableBody,TableCell, TableHead,TableHeader, TableRow} from '@/shared/components/ui/table';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
+import { Equipment } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface EquipmentTableProps {
-    equipment: Equipment[];
-    onEdit: (equipment: Equipment) => void;
-    onDelete: (id: number) => void;
+  equipment: Equipment[];
+  isLoading: boolean;
+  error: boolean;
+  selectedEquipmentId: number | null;
+  onSelectEquipment: (id: number) => void;
+  onDelete: (id: number) => void;
 }
 
-export default function EquipmentTable({ equipment, onEdit, onDelete }: EquipmentTableProps) {
-    const handleDelete = (item: Equipment) => {
-        if (confirm(`Are you sure you want to delete equipment ${item.tag}?`)) {
-            onDelete(item.id);
-        }
-    };
+const statusColorMap: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  CRITICAL: 'destructive',
+  WARNING: 'secondary',
+  STABLE: 'default',
+};
 
+export function EquipmentTable({
+  equipment,
+  isLoading,
+  error,
+  selectedEquipmentId,
+  onSelectEquipment,
+  onDelete,
+}: EquipmentTableProps) {
+  if (isLoading) {
     return (
-        <div className="border rounded-lg">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Tag</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Rack</TableHead>
-                        <TableHead>Slot</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {equipment.length === 0 ? (
-                        <TableRow>
-                            <TableCell  className="text-center text-muted-foreground">
-                                No equipment found
-                            </TableCell>
-                        </TableRow>
-                    ) : (
-                        equipment.map((item) => (
-                            <TableRow key={item.id}>
-                                <TableCell className="font-medium">{item.tag}</TableCell>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>
-                                    {item.type ? (
-                                        <Badge variant="secondary">{item.type}</Badge>
-                                    ) : (
-                                        <span className="text-muted-foreground">-</span>
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {item.rack_id ? (
-                                        <span className="text-sm">Rack #{item.rack_id}</span>
-                                    ) : (
-                                        <span className="text-muted-foreground">Unassigned</span>
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {item.slot_position ? (
-                                        <span className="text-sm">U{item.slot_position}</span>
-                                    ) : (
-                                        <span className="text-muted-foreground">-</span>
-                                    )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
-            </Table>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="text-sky-600 dark:text-sky-500 animate-spin" size={32} />
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600 rounded-lg p-4 m-4 text-center">
+        <p className="text-red-600 dark:text-red-400">Failed to load equipment. Please try again.</p>
+      </div>
+    );
+  }
+
+  if (equipment.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <p className="text-lg font-medium mb-2">No equipment found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <Table>
+        <TableHeader className="sticky top-0 bg-white dark:bg-dark-surface">
+          <TableRow>
+            <TableHead>STATUS</TableHead>
+            <TableHead>NAME</TableHead>
+            <TableHead>TYPE</TableHead>
+            <TableHead>ALERT LEVEL</TableHead>
+            <TableHead>CURRENT LOCATION</TableHead>
+            <TableHead>SLOT</TableHead>
+            <TableHead>ACTIONS</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {equipment.map((eq) => (
+            <TableRow
+              key={eq.id}
+              onClick={() => onSelectEquipment(eq.id)}
+              className={`cursor-pointer transition-colors ${
+                selectedEquipmentId === eq.id
+                  ? 'bg-sky-100 dark:bg-sky-900/30 hover:bg-sky-100 dark:hover:bg-sky-900/30'
+                  : 'hover:bg-gray-50 dark:hover:bg-dark-border/50'
+              }`}
+            >
+              <TableCell>
+                <div className={`w-2 h-2 rounded-full ${eq.status === 'CRITICAL' ? 'bg-red-500' : eq.status === 'WARNING' ? 'bg-yellow-500' : 'bg-green-500'}`} />
+              </TableCell>
+              <TableCell className="font-medium">{eq.name}</TableCell>
+              <TableCell className="text-sm text-gray-600 dark:text-gray-400">{eq.type || '-'}</TableCell>
+              <TableCell>
+                <Badge variant={statusColorMap[eq.status ?? 'STABLE'] || 'default'} className="text-xs">
+                  {eq.status || 'STABLE'}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-xs text-gray-600 dark:text-gray-400">
+                {eq.rack_id ? `${eq.rack_tag}` : '-'}
+              </TableCell>
+              <TableCell className="text-sm text-gray-600 dark:text-gray-400">{eq.slot_position || '-'}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:text-red-600 dark:hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(eq.id);
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }

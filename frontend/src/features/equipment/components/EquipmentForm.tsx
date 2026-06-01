@@ -1,172 +1,255 @@
-import { useState } from 'react';
-import type { CreateEquipmentInput, Equipment } from '@/shared/types/api.types';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from 'react';
+import { Equipment, Rack } from '@/types';
+import { EquipmentFormInput, equipmentSchema } from '@/types/schemas';
+import { useUpdateEquipment, useCreateEquipment, useRackSlots } from '../hooks/useEquipment';
 import { useRacks } from '@/features/racks/hooks/useRacks';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/shared/components/ui/select';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormField, FormMessage } from '@/components/ui/form';
+import { handleBackendErrors } from '@/utils/errorHandler';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface EquipmentFormProps {
-    equipment?: Equipment;
-    onSubmit: (data: CreateEquipmentInput) => Promise<void>;
-    onCancel: () => void;
-    isLoading: boolean;
+  equipment?: Equipment;
+  onSuccess?: () => void;
+  isLoading?: boolean;
+  defaultRackId?: number;
+  defaultSlotPosition?: number;
+  isSlotLocked?: boolean;
 }
 
-export default function EquipmentForm({
-    equipment,
-    onSubmit,
-    onCancel,
-    isLoading,
+export function EquipmentForm({
+  equipment,
+  onSuccess,
+  isLoading = false,
+  defaultRackId,
+  defaultSlotPosition,
+  isSlotLocked = false,
 }: EquipmentFormProps) {
-    const { racks } = useRacks();
-    const [formData, setFormData] = useState<CreateEquipmentInput>(() => ({
-        tag: equipment?.tag || '',
-        name: equipment?.name || '',
-        type: equipment?.type || '',
-        rack_id: equipment?.rack_id || undefined,
-        slot_position: equipment?.slot_position || undefined,
-    }));
+  const [selectedRackId, setSelectedRackId] = useState<number | null>(
+    equipment?.rack_id || defaultRackId || null
+  );
+  const isEditing = !!equipment;
+  const updateEquipment = useUpdateEquipment();
+  const createEquipment = useCreateEquipment();
+  const mutation = isEditing ? updateEquipment : createEquipment;
+  const { data: racksData } = useRacks();
+  const racks = racksData?.data || [];
 
-    const [errors, setErrors] = useState<Record<string, string>>({});
+  // Fetch slots for the selected rack
+  const { data: slotsData, isLoading: slotsLoading } = useRackSlots(selectedRackId);
+  const slots = slotsData?.data;
 
-    const validate = () => {
-        const newErrors: Record<string, string> = {};
-
-        if (!formData.tag.trim()) {
-            newErrors.tag = 'Tag is required';
-        } else if (!/^[A-Z0-9-]+$/.test(formData.tag)) {
-            newErrors.tag = 'Tag must contain only uppercase letters, numbers, and hyphens';
+  const {
+    register,
+    handleSubmit,
+    setError,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<EquipmentFormInput>({
+    resolver: zodResolver(equipmentSchema),
+    defaultValues: equipment
+      ? {
+          tag: equipment.tag,
+          name: equipment.name,
+          type: equipment.type,
+          model: equipment.model,
+          slot_position: equipment.slot_position,
+          serial_number: equipment.serial_number,
+          status: equipment.status as any,
+          rack_id: equipment.rack_id,
         }
+      : {
+          rack_id: defaultRackId,
+          slot_position: defaultSlotPosition,
+        },
+  });
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
-        }
+  const rackIdValue = watch('rack_id');
+  const slotPositionValue = watch('slot_position');
 
-        if (formData.slot_position && (formData.slot_position < 1 || formData.slot_position > 100)) {
-            newErrors.slot_position = 'Slot position must be between 1 and 100';
-        }
+  // Update selectedRackId when form value changes
+  useEffect(() => {
+    const id = rackIdValue ? Number(rackIdValue) : null;
+    setSelectedRackId(id);
+  }, [rackIdValue]);
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+  const onSubmit = async (data: EquipmentFormInput) => {
+    try {
+      const submitData = {
+        ...data,
+        ...(defaultSlotPosition && { slot_position: defaultSlotPosition }),
+      };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!validate()) return;
+      if (isEditing && equipment) {
+        await updateEquipment.mutateAsync({
+          id: equipment.id,
+          data: submitData,
+        });
+        toast.success('Equipment updated successfully');
+      } else {
+        await createEquipment.mutateAsync(submitData);
+        toast.success('Equipment created successfully');
+        reset();
+      }
+      onSuccess?.();
+    } catch (error) {
+      const errorMessage = handleBackendErrors(error, setError);
+      toast.error(errorMessage);
+    }
+  };
 
-        try {
-            await onSubmit(formData);
-        } catch (error) {
-            // Error handled by parent
-            console.error('Error submitting equipment form:', error);
-        }
-    };
+  return (
+    <Form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <FormField>
+        <Label htmlFor="tag">Tag *</Label>
+        <Input
+          id="tag"
+          placeholder="e.g., SYR-X100"
+          disabled={isSubmitting || isLoading}
+          {...register('tag')}
+        />
+        {errors.tag && <FormMessage>{errors.tag.message}</FormMessage>}
+      </FormField>
 
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{equipment ? 'Edit Equipment' : 'Create New Equipment'}</CardTitle>
-            </CardHeader>
-            <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="tag">
-                                Tag <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="tag"
-                                value={formData.tag}
-                                onChange={(e) => setFormData({ ...formData, tag: e.target.value.toUpperCase() })}
-                                placeholder="SRV-001"
-                                className={errors.tag ? 'border-destructive' : ''}
-                            />
-                            {errors.tag && <p className="text-sm text-destructive">{errors.tag}</p>}
-                        </div>
+      {/* Rack Dropdown */}
+      <FormField>
+        <Label htmlFor="rack_id">Rack</Label>
+        <select
+          id="rack_id"
+          {...register('rack_id')}
+          disabled={isSubmitting || isLoading || isSlotLocked}
+          className="w-full px-3 py-1.5 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:opacity-60"
+        >
+          {/* Explicit empty value represents unassigned hardware profiles */}
+          <option value="">Select a rack</option>
+          {racks.map((rack: Rack) => (
+            <option key={rack.id} value={rack.id}>
+              {rack.tag} - {rack.name}
+            </option>
+          ))}
+        </select>
+        {errors.rack_id && <FormMessage>{errors.rack_id.message}</FormMessage>}
+      </FormField>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="name">
-                                Name <span className="text-destructive">*</span>
-                            </Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Web Server 01"
-                                className={errors.name ? 'border-destructive' : ''}
-                            />
-                            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                        </div>
-                    </div>
+      {/* Slot Position field */}
+      <FormField>
+        <Label htmlFor="slot_position">
+          Slot Position (U)
+          {selectedRackId && slotsLoading && <Loader2 className="inline ml-1 w-3 h-3 animate-spin" />}
+        </Label>
+        {selectedRackId ? (
+          <>
+            <select
+              id="slot_position"
+              {...register('slot_position', { valueAsNumber: true })}
+              disabled={isSubmitting || isLoading || slotsLoading || !slots || isSlotLocked}
+              className="w-full px-3 py-1.5 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:opacity-60"
+            >
+              <option value="">Select a slot</option>
+              {/* Include current slot if editing or if slot is locked */}
+              {(isEditing || isSlotLocked) && slotPositionValue && !slots?.available?.includes(slotPositionValue) && (
+                <option value={slotPositionValue}>
+                  Slot {slotPositionValue}U {isSlotLocked ? '(Selected)' : '(Current)'}
+                </option>
+              )}
+              {slots?.available?.map((slot) => (
+                <option key={slot} value={slot}>
+                  Slot {slot}U
+                </option>
+              ))}
+            </select>
+            {slots && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Available: {slots.availableCount} | Occupied: {slots.occupiedCount} of {slots.total}
+                {isSlotLocked && <span className="ml-2 font-semibold">🔒 Slot locked</span>}
+              </p>
+            )}
+          </>
+        ) : (
+          <Input
+            id="slot_position"
+            type="number"
+            placeholder="e.g., 1"
+            disabled={true}
+            className="bg-gray-100 dark:bg-gray-800"
+          />
+        )}
+        {errors.slot_position && <FormMessage>{errors.slot_position.message}</FormMessage>}
+      </FormField>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Type</Label>
-                        <Input
-                            id="type"
-                            value={formData.type}
-                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            placeholder="server, switch, storage"
-                        />
-                    </div>
+      <FormField>
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          placeholder="e.g., Server-01"
+          disabled={isSubmitting || isLoading}
+          {...register('name')}
+        />
+        {errors.name && <FormMessage>{errors.name.message}</FormMessage>}
+      </FormField>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="rack_id">Rack</Label>
-                            <Select
-                                value={formData.rack_id?.toString()}
-                                onValueChange={(value) =>
-                                    setFormData({ ...formData, rack_id: value ? parseInt(value) : undefined })
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a rack" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No Rack</SelectItem>
-                                    {racks.map((rack) => (
-                                        <SelectItem key={rack.id} value={rack.id.toString()}>
-                                            {rack.tag} - {rack.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+      <FormField>
+        <Label htmlFor="type">Type *</Label>
+        <Input
+          id="type"
+          placeholder="e.g., Server, Router, Switch"
+          disabled={isSubmitting || isLoading}
+          {...register('type')}
+        />
+        {errors.type && <FormMessage>{errors.type.message}</FormMessage>}
+      </FormField>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="slot_position">Slot Position (U)</Label>
-                            <Input
-                                id="slot_position"
-                                type="number"
-                                value={formData.slot_position || ''}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        slot_position: e.target.value ? parseInt(e.target.value) : undefined,
-                                    })
-                                }
-                                placeholder="1-100"
-                                min="1"
-                                max="100"
-                                className={errors.slot_position ? 'border-destructive' : ''}
-                            />
-                            {errors.slot_position && (
-                                <p className="text-sm text-destructive">{errors.slot_position}</p>
-                            )}
-                        </div>
-                    </div>
-                </CardContent>
+{/* 
+      <FormField>
+        <Label htmlFor="model">Model *</Label>
+        <Input
+          id="model"
+          placeholder="e.g., Oracle X9-2"
+          disabled={isSubmitting || isLoading}
+          {...register('model')}
+        />
+        {errors.model && <FormMessage>{errors.model.message}</FormMessage>}
+      </FormField>
 
-                <CardFooter className="gap-2">
-                    <Button type="submit" disabled={isLoading} className="flex-1">
-                        {isLoading ? 'Saving...' : equipment ? 'Update Equipment' : 'Create Equipment'}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                        Cancel
-                    </Button>
-                </CardFooter>
-            </form>
-        </Card>
-    );
+      <FormField>
+        <Label htmlFor="serial_number">Serial Number</Label>
+        <Input
+          id="serial_number"
+          placeholder="e.g., SN-12345678"
+          disabled={isSubmitting || isLoading}
+          {...register('serial_number')}
+        />
+        {errors.serial_number && (
+          <FormMessage>{errors.serial_number.message}</FormMessage>
+        )}
+      </FormField>
+
+      <FormField>
+        <Label htmlFor="status">Status *</Label>
+        <Input
+          id="status"
+          placeholder="e.g., STABLE, WARNING, CRITICAL"
+          disabled={isSubmitting || isLoading}
+          {...register('status')}
+        />
+        {errors.status && <FormMessage>{errors.status.message}</FormMessage>}
+      </FormField>
+*/}
+      <div className="flex gap-2 justify-end pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting || isLoading || mutation.isPending}
+        >
+          {isSubmitting || mutation.isPending ? 'Saving...' : isEditing ? 'Update Equipment' : 'Create Equipment'}
+        </Button>
+      </div>
+    </Form>
+  );
 }
